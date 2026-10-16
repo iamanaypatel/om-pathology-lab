@@ -177,7 +177,7 @@
         <button id="headerCartBtn" type="button" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-med-50 hover:bg-med-100 text-med-800 border border-med-200 font-bold text-xs sm:text-sm transition" title="View Selected Tests">
           <svg class="w-4 h-4 text-med-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           <span class="hidden md:inline font-semibold">Selected</span>
-          <span id="headerCartBadge" class="px-1.5 py-0.2 rounded-full bg-med-600 text-white font-extrabold text-[11px]">1</span>
+          <span id="headerCartBadge" class="px-1.5 py-0.2 rounded-full bg-med-600 text-white font-extrabold text-[11px]">0</span>
         </button>
 
         <!-- Quick WhatsApp Button -->
@@ -519,11 +519,11 @@
           <div class="mt-4 pt-3 border-t border-slate-200 space-y-1.5">
             <div class="flex items-center justify-between text-xs text-slate-600">
               <span>Tests Count:</span>
-              <span id="cartSummaryCount" class="font-bold text-slate-900">1 Test</span>
+              <span id="cartSummaryCount" class="font-bold text-slate-900">0 Tests</span>
             </div>
             <div class="flex items-center justify-between text-base sm:text-lg font-black text-navy-900">
               <span>Estimated Total:</span>
-              <span id="cartSummaryTotal" class="text-med-700 text-xl font-black">₹300</span>
+              <span id="cartSummaryTotal" class="text-med-700 text-xl font-black">₹0</span>
             </div>
           </div>
         </div>
@@ -849,17 +849,17 @@
     </a>
     <a href="#booking" id="mobileBottomBookBtn" class="flex-2 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md">
       <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771z"/></svg>
-      <span id="mobileBottomBookText">WhatsApp Book (<span id="mobileCartCount">1</span>)</span>
+      <span id="mobileBottomBookText">WhatsApp Book (<span id="mobileCartCount">0</span>)</span>
     </a>
   </div>
 
   <!-- FLOATING DESKTOP CART BAR -->
   <div id="floatingCartBar" class="hidden fixed bottom-4 left-4 right-4 z-40 max-w-2xl mx-auto bg-navy-900 text-white rounded-2xl p-3 sm:px-5 shadow-2xl border border-med-500/30 flex items-center justify-between gap-3 animate-fade-in">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-med-600 text-white font-black flex items-center justify-center text-xs" id="floatingCartCount">1</div>
+      <div class="w-9 h-9 rounded-xl bg-med-600 text-white font-black flex items-center justify-center text-xs" id="floatingCartCount">0</div>
       <div>
         <div class="text-xs text-slate-300">Selected Tests Total:</div>
-        <div class="text-sm sm:text-base font-black text-emerald-400" id="floatingCartTotal">₹300</div>
+        <div class="text-sm sm:text-base font-black text-emerald-400" id="floatingCartTotal">₹0</div>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -942,15 +942,15 @@
         LAB_CATALOGUE.forEach(t => { TEST_BY_CODE[t.code] = t; });
       }
 
-      // State
-      let selectedCodes = new Set(['CBC']);
+      // State - Empty by default (no test pre-selected)
+      let selectedCodes = new Set();
       let currentCategory = 'popular';
       let currentViewMode = 'grid';
       let activeModalCode = null;
 
       // Restore cart from localStorage if present
       try {
-        const saved = localStorage.getItem('omlab_selected_codes');
+        const saved = localStorage.getItem('omlab_user_cart_v2');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -961,7 +961,7 @@
 
       function saveCartState() {
         try {
-          localStorage.setItem('omlab_selected_codes', JSON.stringify(Array.from(selectedCodes)));
+          localStorage.setItem('omlab_user_cart_v2', JSON.stringify(Array.from(selectedCodes)));
         } catch (e) {}
       }
 
