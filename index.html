@@ -372,7 +372,7 @@
         <div class="mb-3.5">
           <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Quick Test Categories:</div>
           <div id="quickFilterPills" class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1">
-            <button type="button" data-filter="popular" class="quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-med-600 text-white shrink-0 shadow-sm transition">
+            <button type="button" data-filter="popular" class="quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-med-50 shrink-0 transition">
               🔥 Most Popular (Top 14)
             </button>
             <button type="button" data-filter="cbc" class="quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-med-50 shrink-0 transition">
@@ -422,7 +422,7 @@
       </div>
 
       <!-- Search Status & View Mode Bar -->
-      <div id="searchStatusToolbar" class="flex flex-wrap items-center justify-between gap-2 mb-4 bg-med-50 border border-med-200 px-3.5 py-2.5 rounded-2xl">
+      <div id="searchStatusToolbar" class="hidden flex-wrap items-center justify-between gap-2 mb-4 bg-med-50 border border-med-200 px-3.5 py-2.5 rounded-2xl">
         <div class="flex items-center gap-2">
           <span id="searchCountBadge" class="px-2.5 py-0.5 rounded-full bg-med-600 text-white font-bold text-xs">14 Tests Found</span>
           <span id="searchActiveLabel" class="text-xs text-slate-700 font-medium">Most Popular Diagnostic Tests</span>
@@ -438,8 +438,29 @@
         </div>
       </div>
 
+      <!-- Idle Prompt (Shows by default until user selects a category or searches) -->
+      <div id="searchIdlePrompt" class="bg-gradient-to-br from-med-50/40 via-white to-sky-50/40 border-2 border-dashed border-med-300 rounded-3xl p-6 sm:p-10 text-center max-w-2xl mx-auto my-3">
+        <div class="w-12 h-12 rounded-2xl bg-med-100 text-med-700 flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm">
+          🧪
+        </div>
+        <h3 class="text-base sm:text-lg font-black text-navy-900 mb-1">
+          Select Category or Search Test Name
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-500 mb-4 max-w-md mx-auto">
+          Upar diye gaye kisi bhi category tab (jaise <strong>Most Popular</strong>, <strong>CBC</strong>, <strong>Sugar</strong>) par click karein ya test name search karein official rate list dekhne ke liye.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <button type="button" data-select-category="popular" class="px-4 py-2 rounded-xl bg-med-600 hover:bg-med-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5">
+            <span>🔥 View Most Popular Tests (Top 14)</span>
+          </button>
+          <button type="button" data-select-category="all" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs transition">
+            📂 View All 323 Lab Tests
+          </button>
+        </div>
+      </div>
+
       <!-- Test Results Container (Cards or Table) -->
-      <div id="testResultsContainer">
+      <div id="testResultsContainer" class="hidden">
         <!-- Rendered by JavaScript dynamically -->
       </div>
     </div>
@@ -944,7 +965,7 @@
 
       // State - Empty by default (no test pre-selected)
       let selectedCodes = new Set();
-      let currentCategory = 'popular';
+      let currentCategory = null;
       let currentViewMode = 'grid';
       let activeModalCode = null;
 
@@ -1029,6 +1050,32 @@
         if (clearBtn) {
           if (query.length > 0) clearBtn.classList.remove('hidden');
           else clearBtn.classList.add('hidden');
+        }
+
+        const idlePrompt = document.getElementById('searchIdlePrompt');
+        const statusToolbar = document.getElementById('searchStatusToolbar');
+        const hasActiveSelection = query.length > 0 || dept !== '' || (currentCategory !== null && currentCategory !== '');
+
+        if (!hasActiveSelection) {
+          if (idlePrompt) idlePrompt.classList.remove('hidden');
+          if (statusToolbar) {
+            statusToolbar.classList.add('hidden');
+            statusToolbar.classList.remove('flex');
+          }
+          if (resultsContainer) {
+            resultsContainer.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+          }
+          return;
+        }
+
+        if (idlePrompt) idlePrompt.classList.add('hidden');
+        if (statusToolbar) {
+          statusToolbar.classList.remove('hidden');
+          statusToolbar.classList.add('flex');
+        }
+        if (resultsContainer) {
+          resultsContainer.classList.remove('hidden');
         }
 
         if (typeof LAB_CATALOGUE === 'undefined' || !Array.isArray(LAB_CATALOGUE)) {
@@ -1420,6 +1467,25 @@
         });
       }
 
+      // Delegate for buttons with data-select-category
+      document.addEventListener('click', e => {
+        const selBtn = e.target.closest('[data-select-category]');
+        if (!selBtn) return;
+        const cat = selBtn.getAttribute('data-select-category');
+        currentCategory = cat;
+        document.querySelectorAll('.quick-pill').forEach(b => {
+          if (b.getAttribute('data-filter') === cat) {
+            b.className = 'quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-med-600 text-white shrink-0 shadow-sm transition';
+            try { b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch(err) {}
+          } else {
+            b.className = 'quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-med-50 shrink-0 transition';
+          }
+        });
+        const searchInput = document.getElementById('testSearchInput');
+        if (searchInput) searchInput.value = '';
+        renderTestDirectory();
+      });
+
       // Quick Category Pills
       document.getElementById('quickFilterPills')?.addEventListener('click', e => {
         const btn = e.target.closest('button[data-filter]');
@@ -1484,18 +1550,14 @@
         renderTestDirectory();
       });
 
-      // Reset Search
+      // Reset Search (Resets to clean initial idle state)
       document.getElementById('resetSearchBtn')?.addEventListener('click', () => {
         if (searchInput) searchInput.value = '';
         const deptSelect = document.getElementById('deptFilterSelect');
         if (deptSelect) deptSelect.value = '';
-        currentCategory = 'popular';
+        currentCategory = null;
         document.querySelectorAll('.quick-pill').forEach(b => {
-          if (b.getAttribute('data-filter') === 'popular') {
-            b.className = 'quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-med-600 text-white shrink-0 shadow-sm transition';
-          } else {
-            b.className = 'quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-med-50 shrink-0 transition';
-          }
+          b.className = 'quick-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-med-50 shrink-0 transition';
         });
         renderTestDirectory();
       });
